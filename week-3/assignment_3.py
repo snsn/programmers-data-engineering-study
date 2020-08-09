@@ -15,17 +15,17 @@ sql_conn_str = 'postgresql://{user}:{password}@grepp-data.cduaw970ssvt.ap-northe
     user=user,
     password=password
 )
-sqlalchemy.create_engine(sql_conn_str)
+engine = sqlalchemy.create_engine(sql_conn_str)
 # %load_ext sql
 # %sql postgresql://peter:PeterWoW1!@grepp-data.cduaw970ssvt.ap-northeast-2.redshift.amazonaws.com:5439/dev
+echo=True
 
 # Commented out IPython magic to ensure Python compatibility.
 # %%sql
 # 
-# CREATE TABLE peter.monthly_revenue AS
 # SELECT 
-#   TO_CHAR(stp.ts, 'yyyy-mm') AS year_month, 
-#   channel, 
+#   LEFT(stp.ts, 7) AS year_month, 
+#   c.channelname, 
 #   COUNT(DISTINCT usc.userid) AS uniqueUsers,
 #   COUNT(
 #       DISTINCT 
@@ -34,20 +34,19 @@ sqlalchemy.create_engine(sql_conn_str)
 #           ELSE NULL
 #           END
 #         ) AS paidUsers,
-#   paidUsers::float / uniqueUsers::float AS conversionRate,
+#   ROUND(paidUsers::float * 100 / NULLIF(uniqueUsers, 0), 2) AS conversionRate,
 #   SUM(stn.amount) AS grossRevenue,
 #   SUM(
-#       CASE stn.refunded
-#         WHEN FALSE THEN stn.amount
+#       CASE WHEN stn.refunded IS FALSE THEN stn.amount
 #         ELSE 0
 #         END
 #   ) AS netRevenue
 # FROM raw_data.channel c
 # LEFT JOIN raw_data.user_session_channel usc
 # ON c.channelname = usc.channel
-# JOIN raw_data.session_timestamp stp
+# LEFT JOIN raw_data.session_timestamp stp
 # ON stp.sessionid = usc.sessionid
-# JOIN raw_data.session_transaction stn
+# LEFT JOIN raw_data.session_transaction stn
 # ON stn.sessionid = usc.sessionid
 # GROUP BY 1, 2;
 
